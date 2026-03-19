@@ -31,7 +31,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IResumeRepository, ResumeRepository>();
         services.AddScoped<IResumeTextExtractor, ResumeTextExtractor>();
-        services.AddScoped<IAiResumeAnalyzerService, GeminiSemanticKernelResumeAnalyzerService>();
+        services.AddHttpClient<IAiResumeAnalyzerService, GeminiSemanticKernelResumeAnalyzerService>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<AuthService>();
         services.AddScoped<ResumeService>();
