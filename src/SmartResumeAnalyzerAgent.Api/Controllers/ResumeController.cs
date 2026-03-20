@@ -1,12 +1,11 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SmartResumeAnalyzerAgent.Api.Models;
 using SmartResumeAnalyzerAgent.Application.DTOs.Resume;
 using SmartResumeAnalyzerAgent.Application.Features.Resumes;
 
 namespace SmartResumeAnalyzerAgent.Api.Controllers;
 
 [ApiController]
-[Authorize]
 [Route("api/resumes")]
 public sealed class ResumeController : ControllerBase
 {
@@ -25,27 +24,27 @@ public sealed class ResumeController : ControllerBase
 
     [HttpPost("analyze")]
     [RequestSizeLimit(10_000_000)]
-    public async Task<ActionResult<ResumeAnalysisResponse>> Analyze([FromForm] IFormFile file, [FromForm] Guid userId, [FromForm] string? jobRole, CancellationToken cancellationToken)
+    public async Task<ActionResult<ResumeAnalysisResponse>> Analyze([FromForm] AnalyzeResumeFormRequest request, CancellationToken cancellationToken)
     {
-        if (file.Length == 0)
+        if (request.File is null || request.File.Length == 0)
         {
             return BadRequest("File is required.");
         }
 
-        if (!AllowedContentTypes.Contains(file.ContentType))
+        if (!AllowedContentTypes.Contains(request.File.ContentType))
         {
             return BadRequest("Only PDF and DOCX files are supported.");
         }
 
-        await using var stream = file.OpenReadStream();
+        await using var stream = request.File.OpenReadStream();
         var response = await _resumeService.UploadAndAnalyzeAsync(
             stream,
-            file.FileName,
-            file.ContentType,
+            request.File.FileName,
+            request.File.ContentType,
             new ResumeUploadRequest
             {
-                UserId = userId,
-                JobRole = jobRole
+                UserId = request.UserId,
+                JobRole = request.JobRole
             },
             cancellationToken);
 

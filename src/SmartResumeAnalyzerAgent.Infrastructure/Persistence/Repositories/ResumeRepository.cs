@@ -16,7 +16,6 @@ public sealed class ResumeRepository : IResumeRepository
     public async Task AddAsync(Resume resume, CancellationToken cancellationToken)
     {
         await _dbContext.Resumes.AddAsync(resume, cancellationToken);
-        await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<Resume?> GetByIdAsync(Guid resumeId, CancellationToken cancellationToken) =>

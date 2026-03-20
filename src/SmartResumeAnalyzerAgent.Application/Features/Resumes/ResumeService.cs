@@ -34,7 +34,7 @@ public sealed class ResumeService
         CancellationToken cancellationToken)
     {
         var user = await _userRepository.GetByIdAsync(request.UserId, cancellationToken)
-            ?? throw new KeyNotFoundException("User not found.");
+            ?? await CreateGuestUserAsync(request.UserId, cancellationToken);
 
         var extractedText = await _resumeTextExtractor.ExtractTextAsync(fileStream, fileName, cancellationToken);
         if (string.IsNullOrWhiteSpace(extractedText))
@@ -115,5 +115,19 @@ public sealed class ResumeService
             MatchedJobRoles = analysis.MatchedJobRoles,
             CreatedAtUtc = resume.CreatedAtUtc
         };
+    }
+
+    private async Task<User> CreateGuestUserAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var guestUser = new User
+        {
+            Id = userId == Guid.Empty ? Guid.NewGuid() : userId,
+            FullName = "Guest User",
+            Email = $"guest-{(userId == Guid.Empty ? Guid.NewGuid() : userId)}@smartresume.local",
+            PasswordHash = "GUEST"
+        };
+
+        await _userRepository.AddAsync(guestUser, cancellationToken);
+        return guestUser;
     }
 }
