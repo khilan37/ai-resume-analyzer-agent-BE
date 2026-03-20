@@ -1,5 +1,8 @@
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.DataProtection;
 using SmartResumeAnalyzerAgent.Infrastructure.DependencyInjection;
+using SmartResumeAnalyzerAgent.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 var dataProtectionPath = Path.Combine(builder.Environment.ContentRootPath, ".keys");
@@ -24,6 +27,21 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+var forwardedHeadersOptions = new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+};
+forwardedHeadersOptions.KnownNetworks.Clear();
+forwardedHeadersOptions.KnownProxies.Clear();
+
+app.UseForwardedHeaders(forwardedHeadersOptions);
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    dbContext.Database.Migrate();
+}
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -34,6 +52,6 @@ app.UseHttpsRedirection();
 app.UseCors("frontend");
 app.UseAuthentication();
 app.UseAuthorization();
-app.MapGet("/", () => Results.Redirect("/swagger"));
+app.MapGet("/", () => Results.Ok(new { status = "ok", service = "SmartResumeAnalyzerAgent.Api" }));
 app.MapControllers();
 app.Run();

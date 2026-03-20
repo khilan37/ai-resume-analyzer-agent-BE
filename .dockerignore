@@ -1,0 +1,11 @@
+.git
+.vs
+bin
+obj
+**/bin
+**/obj
+Dockerfile*
+build.log
+infra.log
+msbuild.log
+docs
